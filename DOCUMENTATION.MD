@@ -18,236 +18,54 @@
 * `src/extension.ts` — Основная логика приложения.
 * `.vscode/launch.json` — Конфигурация для запуска отладки (Extension Development Host).
 
-## 3. Описание алгоритмов
+## Документация по коду 
 
-### 3.1. Активация
-Плагин использует событие активации `onCommand:simple-translator.translate`.
-При первом вызове команды VS Code загружает файл `out/extension.js` и вызывает функцию `activate()`.
+Данный раздел содержит подробное описание функции активации и алгоритма обработки текста.
 
-### 3.2. Обработка текста
-Для корректной передачи текста в GET-запрос Google Translate выполняются следующие преобразования:
+Файл: `src/extension.ts`
 
-1. **Sanitization (Очистка):**
-   ```typescript
-   const cleanText = text.replace(/\s+/g, ' ').trim();
-Преобразует многострочный текст в одну строку, убирая лишние пробелы и табуляцию.
-
-Language Logic (Выбор языка): Используется эвристическая проверка на наличие кириллицы:
-
-TypeScript
-
-const targetLang = /[а-яА-ЯёЁ]/.test(cleanText) ? 'en' : 'ru';
-Encoding (Кодирование):
-
-TypeScript
-
-const encodedText = encodeURIComponent(cleanText);
-Преобразует спецсимволы (пробелы, &, ?) в безопасный формат URL.
-
-4. Основные модули и API
-В файле extension.ts используются следующие методы VS Code API:
-
-vscode.commands.registerCommand — регистрация обработчика команды.
-
-vscode.window.activeTextEditor — доступ к текущему активному буферу редактора.
-
-vscode.env.openExternal — вызов системного браузера с сформированной ссылкой.
-
-5. Полный листинг кода
-5.1. Манифест (package.json)
-Ключевые настройки конфигурации:
-
-JSON
-
-{
-  "name": "simple-translator",
-  "displayName": "Simple Translator",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.75.0"
-  },
-  "activationEvents": [
-    "onCommand:simple-translator.translate"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "simple-translator.translate",
-        "title": "Translate Selection"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "simple-translator.translate",
-        "key": "ctrl+t",
-        "mac": "cmd+t",
-        "when": "editorTextFocus"
-      }
-    ]
-  }
-}
-5.2. Логика (src/extension.ts)
-Реализация алгоритма перевода:
-
-TypeScript
-
+```typescript
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
-    // Регистрация команды
+
+    // Регистрация команды. ID 'simple-translator.translate' должен совпадать с package.json!
     let disposable = vscode.commands.registerCommand('simple-translator.translate', () => {
 
         // 1. Получаем активный редактор
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            return;
+            return; 
         }
 
-        // 2. Получаем текст выделения
+        // 2. Получаем выделенный текст
         const selection = editor.selection;
         const text = editor.document.getText(selection);
 
+        // Если ничего не выделено - выводим сообщение
         if (!text) {
             vscode.window.showInformationMessage('Выделите текст для перевода!');
             return;
         }
 
-        // 3. Очистка и подготовка текста
+        // 3. Очистка текста от лишних пробелов и переносов (RegEx)
         const cleanText = text.replace(/\s+/g, ' ').trim();
 
-        // 4. Определение языка (Если есть кириллица -> EN, иначе -> RU)
+        // 4. Логика автоопределения языка
+        // Если есть русские буквы -> переводим на Английский. Иначе -> на Русский.
         const hasCyrillic = /[а-яА-ЯёЁ]/.test(cleanText);
         const sl = hasCyrillic ? 'ru' : 'auto';
         const tl = hasCyrillic ? 'en' : 'ru';
 
-        // 5. Кодирование для URL
+        // 5. Кодируем текст для URL (чтобы спецсимволы не ломали ссылку)
         const encodedText = encodeURIComponent(cleanText);
 
-        // 6. Формирование ссылки
+        // 6. Формируем ссылку
         const url = `https://translate.google.ru/?sl=${sl}&tl=${tl}&text=${encodedText}&op=translate`;
 
-        // 7. Открытие браузера
+        // 7. Открываем браузер через встроенное API VS Code
         vscode.env.openExternal(vscode.Uri.parse(url));
     });
-
-    context.subscriptions.push(disposable);
-}
-
-export function deactivate() {}
-6. Требования
-VS Code версии ^1.75.0
-
-Node.js (для сборки проекта)
-onCommand:simple-translator.translate
-
-При первом вызове команды VS Code загружает файл `out/extension.js` и вызывает функцию `activate()`.
-
----
-
-### 3.2. Обработка текста
-
-Для корректной передачи текста в GET-запрос Google Translate выполняются следующие шаги.
-
-#### 1. Sanitization (очистка)
-
-```ts
-const cleanText = text.replace(/\s+/g, ' ').trim();
-Преобразует многострочный текст в одну строку, убирая лишние пробелы и табуляцию.
-
-##3.2.2. Language Logic (выбор языка)
-Используется проверка на наличие кириллицы:
-const hasCyrillic = /[а-яА-ЯёЁ]/.test(cleanText);
-const sl = hasCyrillic ? 'ru' : 'auto';
-const tl = hasCyrillic ? 'en' : 'ru';
-
-##3.2.3. Encoding (кодирование)
-const encodedText = encodeURIComponent(cleanText);
-
-###4. Основные модули и API
-
-В файле extension.ts используются следующие методы VS Code API:
-
-vscode.commands.registerCommand
-
-vscode.window.activeTextEditor
-
-vscode.env.openExternal
-
-###5. Полный листинг кода
-##5.1. Манифест (package.json)
-{
-  "name": "simple-translator",
-  "displayName": "Simple Translator",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.75.0"
-  },
-  "activationEvents": [
-    "onCommand:simple-translator.translate"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "simple-translator.translate",
-        "title": "Translate Selection"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "simple-translator.translate",
-        "key": "ctrl+t",
-        "mac": "cmd+t",
-        "when": "editorTextFocus"
-      }
-    ]
-  }
-}
-
-##5.2. Логика (src/extension.ts)
-import * as vscode from 'vscode';
-
-export function activate(context: vscode.ExtensionContext) {
-
-    let disposable = vscode.commands.registerCommand(
-        'simple-translator.translate',
-        () => {
-
-            const editor = vscode.window.activeTextEditor;
-            if (!editor) {
-                return;
-            }
-
-            const selection = editor.selection;
-            const text = editor.document.getText(selection);
-
-            if (!text) {
-                vscode.window.showInformationMessage(
-                    'Выделите текст для перевода!'
-                );
-                return;
-            }
-
-            const cleanText = text.replace(/\s+/g, ' ').trim();
-
-            const hasCyrillic = /[а-яА-ЯёЁ]/.test(cleanText);
-            const sl = hasCyrillic ? 'ru' : 'auto';
-            const tl = hasCyrillic ? 'en' : 'ru';
-
-            const encodedText = encodeURIComponent(cleanText);
-
-            const url =
-                `https://translate.google.ru/?sl=${sl}` +
-                `&tl=${tl}` +
-                `&text=${encodedText}` +
-                `&op=translate`;
-
-            vscode.env.openExternal(
-                vscode.Uri.parse(url)
-            );
-        }
-    );
 
     context.subscriptions.push(disposable);
 }
