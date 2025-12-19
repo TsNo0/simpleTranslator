@@ -49,24 +49,15 @@ Simple Translator — это расширение для VS Code, позволя
 ```
 import * as vscode from 'vscode';
 
-/**
- * Функция активации расширения.
- * Является точкой входа. Выполняется автоматически средой VS Code 
- * при наступлении события активации, указанного в package.json (onCommand).
- * * В этой функции происходит регистрация команды и определение основной логики:
- * получение выделенного текста, его очистка, определение языка и открытие браузера.
- *
- * @param {vscode.ExtensionContext} context - Контекст расширения, предоставляемый VS Code. 
- * Содержит утилиты для управления жизненным циклом и подписками.
- *
- * @example
- * // Функция вызывается системой (Extension Host), разработчик не вызывает её вручную.
- * // Пример того, как это делает VS Code внутри:
- * const context = new vscode.ExtensionContext(...);
- * activate(context);
- */
-export function activate(context: vscode.ExtensionContext) {
 
+export function activate(context: vscode.ExtensionContext) {
+   /**
+    * Функция активации расширения.
+    * Является точкой входа. Выполняется автоматически средой VS Code 
+    * при наступлении события активации, указанного в package.json (onCommand).
+    * * В этой функции происходит регистрация команды и определение основной логики:
+    * получение выделенного текста, его очистка, определение языка и открытие браузера.
+    */
     // Регистрация команды. Идентификатор 'simple-translator.translate' должен совпадать с package.json
     let disposable = vscode.commands.registerCommand('simple-translator.translate', () => {
 
@@ -111,15 +102,11 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 }
 
-/**
+/*
  * Функция деактивации расширения.
  * Вызывается платформой VS Code перед отключением расширения (например, при закрытии редактора).
  * Используется для освобождения ресурсов, закрытия соединений или очистки таймеров.
- * * В данном случае функция пуста, так как очистка command disposable 
+ * В данном случае функция пуста, так как очистка command disposable 
  * обрабатывается автоматически через context.subscriptions.
- *
- * @example
- * // Вызывается системой автоматически при завершении работы:
- * deactivate();
  */
 export function deactivate() {}
