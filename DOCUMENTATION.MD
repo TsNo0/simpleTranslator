@@ -49,15 +49,24 @@ Simple Translator — это расширение для VS Code, позволя
 ```
 import * as vscode from 'vscode';
 
-
+/**
+ * Функция активации расширения.
+ * Является точкой входа (Entry Point). Выполняется автоматически средой VS Code 
+ * при наступлении события активации, указанного в package.json (onCommand).
+ * * Логика работы:
+ * 1. Получение выделенного текста.
+ * 2. Очистка текста от лишних символов.
+ * 3. Определение языка (RU <-> EN).
+ * 4. Формирование ссылки и открытие браузера.
+ *
+ * @param {vscode.ExtensionContext} context - Контекст расширения для управления жизненным циклом.
+ * * @example
+ * // Пример вызова (осуществляется процессом Extension Host):
+ * const context = new vscode.ExtensionContext(...);
+ * activate(context);
+ */
 export function activate(context: vscode.ExtensionContext) {
-   /**
-    * Функция активации расширения.
-    * Является точкой входа. Выполняется автоматически средой VS Code 
-    * при наступлении события активации, указанного в package.json (onCommand).
-    * * В этой функции происходит регистрация команды и определение основной логики:
-    * получение выделенного текста, его очистка, определение языка и открытие браузера.
-    */
+
     // Регистрация команды. Идентификатор 'simple-translator.translate' должен совпадать с package.json
     let disposable = vscode.commands.registerCommand('simple-translator.translate', () => {
 
@@ -102,11 +111,12 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 }
 
-/*
+/**
  * Функция деактивации расширения.
- * Вызывается платформой VS Code перед отключением расширения (например, при закрытии редактора).
- * Используется для освобождения ресурсов, закрытия соединений или очистки таймеров.
- * В данном случае функция пуста, так как очистка command disposable 
- * обрабатывается автоматически через context.subscriptions.
+ * Вызывается платформой VS Code перед отключением расширения (например, при закрытии VS Code).
+ * Используется для освобождения ресурсов.
+ * * @example
+ * // Вызывается системой автоматически при завершении работы:
+ * deactivate();
  */
 export function deactivate() {}
