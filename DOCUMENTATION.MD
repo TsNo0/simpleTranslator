@@ -118,6 +118,5 @@ export function activate(context: vscode.ExtensionContext) {
  */
 export function deactivate() {}
 ```
-6a427d1 Feature: Implemented translation logic
-8d004a2 Initial structure setup
-1539b51 (origin/main) Initial commit
+| a1b2c3d | Alex | 2023-12-19 | Feature: Implemented translation logic |
+| e4f5g6h | Alex | 2023-12-19 | Initial structure setup |
