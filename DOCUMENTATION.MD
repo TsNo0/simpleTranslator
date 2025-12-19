@@ -58,6 +58,10 @@ import * as vscode from 'vscode';
  * 2. Очистка текста от лишних символов (нормализация).
  * 3. Определение языка (RU <-> EN).
  * 4. Формирование ссылки и открытие браузера.
+ * * @param context - Контекст расширения, предоставляемый VS Code для управления подписками.
+ * * @example
+ * // Вызывается процессом Extension Host автоматически:
+ * activate(context);
  */
 export function activate(context: vscode.ExtensionContext) {
 
@@ -109,5 +113,8 @@ export function activate(context: vscode.ExtensionContext) {
  * Функция деактивации расширения.
  * * Вызывается платформой VS Code перед отключением расширения (например, при закрытии VS Code).
  * Используется для освобождения ресурсов.
+ * * @example
+ * // Вызывается системой автоматически при завершении работы:
+ * deactivate();
  */
 export function deactivate() {}
