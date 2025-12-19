@@ -47,50 +47,79 @@ Simple Translator — это расширение для VS Code, позволя
 
 **Файл:** `src/extension.ts`
 
-```typescript
 import * as vscode from 'vscode';
 
+/**
+ * Функция активации расширения.
+ * Является точкой входа. Выполняется автоматически средой VS Code 
+ * при наступлении события активации, указанного в package.json (onCommand).
+ * * В этой функции происходит регистрация команды и определение основной логики:
+ * получение выделенного текста, его очистка, определение языка и открытие браузера.
+ *
+ * @param {vscode.ExtensionContext} context - Контекст расширения, предоставляемый VS Code. 
+ * Содержит утилиты для управления жизненным циклом и подписками.
+ *
+ * @example
+ * // Функция вызывается системой (Extension Host), разработчик не вызывает её вручную.
+ * // Пример того, как это делает VS Code внутри:
+ * const context = new vscode.ExtensionContext(...);
+ * activate(context);
+ */
 export function activate(context: vscode.ExtensionContext) {
 
-    // Регистрация команды. ID 'simple-translator.translate' должен совпадать с package.json!
+    // Регистрация команды. Идентификатор 'simple-translator.translate' должен совпадать с package.json
     let disposable = vscode.commands.registerCommand('simple-translator.translate', () => {
 
-        // 1. Получаем активный редактор
+        // 1. Получаем доступ к активному текстовому редактору
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            return; 
+            return; // Если редактор не открыт, прекращаем выполнение
         }
 
-        // 2. Получаем выделенный текст
+        // 2. Получаем объект выделения (Selection) и текст внутри него
         const selection = editor.selection;
         const text = editor.document.getText(selection);
 
-        // Если ничего не выделено - выводим сообщение
+        // Если текст отсутствует (пустое выделение), уведомляем пользователя
         if (!text) {
             vscode.window.showInformationMessage('Выделите текст для перевода!');
             return;
         }
 
-        // 3. Очистка текста от лишних пробелов и переносов (RegEx)
+        // 3. Санитизация (очистка) текста
+        // Регулярное выражение /\s+/g заменяет переносы строк и табуляцию на один пробел
         const cleanText = text.replace(/\s+/g, ' ').trim();
 
-        // 4. Логика автоопределения языка
-        // Если есть русские буквы -> переводим на Английский. Иначе -> на Русский.
+        // 4. Эвристический алгоритм определения языка
+        // Если в строке найдена хотя бы одна буква кириллицы -> переводим на Английский (en).
+        // Иначе считаем, что текст иностранный -> переводим на Русский (ru).
         const hasCyrillic = /[а-яА-ЯёЁ]/.test(cleanText);
-        const sl = hasCyrillic ? 'ru' : 'auto';
-        const tl = hasCyrillic ? 'en' : 'ru';
+        const sl = hasCyrillic ? 'ru' : 'auto'; // Source Language (исходный)
+        const tl = hasCyrillic ? 'en' : 'ru';   // Target Language (целевой)
 
-        // 5. Кодируем текст для URL (чтобы спецсимволы не ломали ссылку)
+        // 5. Кодирование текста для безопасной вставки в URL (обрабатывает пробелы, &, ? и др.)
         const encodedText = encodeURIComponent(cleanText);
 
-        // 6. Формируем ссылку
+        // 6. Формирование ссылки для Google Translate
         const url = `https://translate.google.ru/?sl=${sl}&tl=${tl}&text=${encodedText}&op=translate`;
 
-        // 7. Открываем браузер через встроенное API VS Code
+        // 7. Открытие системного браузера с сформированной ссылкой
         vscode.env.openExternal(vscode.Uri.parse(url));
     });
 
+    // Добавляем команду в список подписок для автоматического удаления при деактивации
     context.subscriptions.push(disposable);
 }
 
+/**
+ * Функция деактивации расширения.
+ * Вызывается платформой VS Code перед отключением расширения (например, при закрытии редактора).
+ * Используется для освобождения ресурсов, закрытия соединений или очистки таймеров.
+ * * В данном случае функция пуста, так как очистка command disposable 
+ * обрабатывается автоматически через context.subscriptions.
+ *
+ * @example
+ * // Вызывается системой автоматически при завершении работы:
+ * deactivate();
+ */
 export function deactivate() {}
